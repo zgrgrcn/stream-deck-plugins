@@ -1,0 +1,43 @@
+{
+	"Name": "System Monitor",
+	"Version": "0.1.0.0",
+	"Author": "zgrgrcn",
+	"Actions": [
+		{
+			"Name": "System Metric",
+			"UUID": "com.zgrgrcn.system-monitor.metric",
+			"Icon": "imgs/actions/metric/icon",
+			"Tooltip": "CPU, RAM, power or network speed with a live graph.",
+			"PropertyInspectorPath": "ui/metric.html",
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/actions/metric/key",
+					"ShowTitle": false
+				}
+			]
+		}
+	],
+	"Category": "System Monitor",
+	"CategoryIcon": "imgs/plugin/category-icon",
+	"CodePath": "bin/plugin.js",
+	"Description": "Live CPU, RAM, total system power (W) and network down/up speed, each with a one-minute graph. Apple Silicon Macs.",
+	"Icon": "imgs/plugin/marketplace",
+	"SDKVersion": 3,
+	"Software": {
+		"MinimumVersion": "7.1"
+	},
+	"OS": [
+		{
+			"Platform": "mac",
+			"MinimumVersion": "12"
+		}
+	],
+	"Nodejs": {
+		"Version": "24",
+		"Debug": "enabled"
+	},
+	"UUID": "com.zgrgrcn.system-monitor"
+}

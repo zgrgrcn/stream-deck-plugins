@@ -1,0 +1,43 @@
+{
+	"Name": "Claude Usage",
+	"Version": "0.1.0.0",
+	"Author": "zgrgrcn",
+	"Actions": [
+		{
+			"Name": "Usage Limit",
+			"UUID": "com.zgrgrcn.claude-usage.limit",
+			"Icon": "imgs/actions/limit/icon",
+			"Tooltip": "Shows a Claude plan limit (5-hour, weekly or per-model) and where it lands at the current pace. Press to refresh.",
+			"PropertyInspectorPath": "ui/limit.html",
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/actions/limit/key",
+					"ShowTitle": false
+				}
+			]
+		}
+	],
+	"Category": "Claude Usage",
+	"CategoryIcon": "imgs/plugin/category-icon",
+	"CodePath": "bin/plugin.js",
+	"Description": "Your Claude plan limits on Stream Deck: 5-hour, weekly and per-model usage, with a pace forecast. Reads the login Claude Code already has; no cookies, no API key.",
+	"Icon": "imgs/plugin/marketplace",
+	"SDKVersion": 3,
+	"Software": {
+		"MinimumVersion": "7.1"
+	},
+	"OS": [
+		{
+			"Platform": "mac",
+			"MinimumVersion": "12"
+		}
+	],
+	"Nodejs": {
+		"Version": "24",
+		"Debug": "enabled"
+	},
+	"UUID": "com.zgrgrcn.claude-usage"
+}
