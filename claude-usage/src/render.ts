@@ -45,8 +45,8 @@ export function renderKey(v: KeyView, now = new Date()): string {
 	const tick = v.elapsed === undefined ? "" : `<rect x="${12 + v.elapsed * 120 - 1.5}" y="90" width="3" height="16" fill="#fff"/>`;
 	const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="144" height="144" viewBox="0 0 144 144" opacity="${v.dim ? 0.4 : 1}">
 <rect width="144" height="144" fill="#0d1117"/>
-<text x="12" y="28" font-family="Helvetica, Arial" font-size="20" font-weight="700" fill="${GRAY}">${esc(v.label)}</text>
-<text x="132" y="28" font-family="Helvetica, Arial" font-size="20" fill="${GRAY}" text-anchor="end">${v.resetsIn === undefined ? "" : duration(v.resetsIn)}</text>
+<text x="12" y="28" font-family="Helvetica, Arial" font-size="17" font-weight="700" fill="${GRAY}">${esc(v.label)}</text>
+<text x="132" y="28" font-family="Helvetica, Arial" font-size="17" fill="${GRAY}" text-anchor="end">${v.resetsIn === undefined ? "" : duration(v.resetsIn)}</text>
 <text x="72" y="80" font-family="Helvetica, Arial" font-size="50" font-weight="700" fill="#fff" text-anchor="middle">${pct}</text>
 <rect x="12" y="93" width="120" height="10" rx="5" fill="#30363d"/>
 <rect x="12" y="93" width="${fill}" height="10" rx="5" fill="${f.color}"/>
