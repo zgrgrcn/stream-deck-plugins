@@ -26,7 +26,7 @@ Press a key to refresh right away.
 
 ## How it works
 
-- **Data:** Claude Code stores its OAuth login in the macOS Keychain (`Claude Code-credentials`). The plugin reads that token and calls the same usage endpoint Claude Code's `/usage` command uses. The token is only read, never refreshed, so it cannot sign Claude Code out. Nothing leaves your Mac except that one request to `api.anthropic.com`.
+- **Data:** Claude Code stores its OAuth login in the macOS Keychain (`Claude Code-credentials`). The plugin reads that token and calls the same usage endpoint Claude Code's `/usage` command uses. When the token has expired and the `claude` CLI is not running, the plugin refreshes it the same way Claude Code does and writes the new pair back to the Keychain, so Claude Code keeps working too. Nothing leaves your Mac except those requests to `api.anthropic.com` and `platform.claude.com`.
 - **When it polls:** Once a minute, and only while the Claude desktop app or the `claude` CLI is running. When neither is running, the keys dim and no requests are made.
 - **Keychain prompt:** The first time it runs, macOS asks whether `node` may use the Keychain item. Choose **Always Allow**.
 
@@ -34,7 +34,7 @@ Press a key to refresh right away.
 
 | Key shows | Meaning |
 | --- | --- |
-| `RUN claude` | No valid login found. Open Claude Code to sign in or refresh the token. |
+| `RUN claude` | No valid login found, or the refresh failed. Open Claude Code to sign in. |
 | `OFFLINE` | The request failed and there are no earlier numbers to show. |
 | `N/A` | Your plan does not have this limit. |
 | Dimmed | Claude is not running. The numbers are from the last poll. |

@@ -1,10 +1,16 @@
+import streamDeck from "@elgato/streamdeck";
 import { execFile } from "node:child_process";
+import { userInfo } from "node:os";
 import { promisify } from "node:util";
 
 const exec = promisify(execFile);
 
-// Undocumented endpoint behind Claude Code's /usage; it can change without notice.
+// Undocumented endpoints behind Claude Code's /usage and login; they can change without notice.
 const USAGE_URL = "https://api.anthropic.com/api/oauth/usage";
+const TOKEN_URL = "https://platform.claude.com/v1/oauth/token";
+const CLIENT_ID = "9d1c250a-e61b-44d9-88ed-5944d1962f5e"; // Claude Code's public OAuth client id
+const KEYCHAIN_SERVICE = "Claude Code-credentials";
+const REFRESH_RETRY_MS = 10 * 60_000;
 
 export type Limit = {
 	kind: "session" | "weekly_all" | "weekly_scoped" | string;
@@ -15,15 +21,91 @@ export type Limit = {
 
 export type Usage = { limits: Limit[] } | { error: "auth" | "network" };
 
-/** Claude Code keeps its OAuth login in the macOS Keychain. Read only: refreshing it here would rotate Claude Code's tokens. */
-async function accessToken(): Promise<string | null> {
+type Oauth = {
+	accessToken: string;
+	refreshToken?: string;
+	expiresAt: number;
+	refreshTokenExpiresAt?: number;
+	scopes?: string[];
+};
+type Credentials = Record<string, unknown> & { claudeAiOauth?: Oauth };
+
+/** Claude Code keeps its OAuth login in the macOS Keychain. */
+async function readCredentials(): Promise<Credentials | null> {
 	try {
-		const { stdout } = await exec("security", ["find-generic-password", "-s", "Claude Code-credentials", "-w"]);
-		const oauth = JSON.parse(stdout).claudeAiOauth;
-		if (!oauth?.accessToken || oauth.expiresAt < Date.now()) return null;
-		return oauth.accessToken;
+		const { stdout } = await exec("security", ["find-generic-password", "-s", KEYCHAIN_SERVICE, "-w"]);
+		return JSON.parse(stdout);
 	} catch {
 		return null;
+	}
+}
+
+async function writeCredentials(creds: Credentials): Promise<void> {
+	// Same command Claude Code uses, so it picks up the rotated pair on its next read.
+	const hex = Buffer.from(JSON.stringify(creds)).toString("hex");
+	await exec("security", ["add-generic-password", "-U", "-a", userInfo().username, "-s", KEYCHAIN_SERVICE, "-X", hex]);
+}
+
+let refreshFailedAt = 0;
+
+/**
+ * Rotate an expired token with the refresh token and store the new pair, as Claude Code would.
+ * Only runs while the claude CLI is not up: a running CLI refreshes on its own, and two refreshers
+ * sharing one rotating refresh token would sign each other out.
+ */
+async function refreshAccessToken(creds: Credentials, oauth: Oauth): Promise<string | null> {
+	if (!oauth.refreshToken || Date.now() - refreshFailedAt < REFRESH_RETRY_MS || (await cliRunning())) return null;
+	try {
+		const res = await fetch(TOKEN_URL, {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({
+				grant_type: "refresh_token",
+				refresh_token: oauth.refreshToken,
+				client_id: CLIENT_ID,
+				scope: oauth.scopes?.join(" "),
+			}),
+			signal: AbortSignal.timeout(15_000),
+		});
+		if (!res.ok) throw new Error(`HTTP ${res.status}`);
+		const t = (await res.json()) as {
+			access_token: string;
+			refresh_token?: string;
+			expires_in: number;
+			refresh_token_expires_in?: number;
+		};
+		const next: Oauth = {
+			...oauth,
+			accessToken: t.access_token,
+			refreshToken: t.refresh_token ?? oauth.refreshToken,
+			expiresAt: Date.now() + t.expires_in * 1000,
+			...(t.refresh_token_expires_in ? { refreshTokenExpiresAt: Date.now() + t.refresh_token_expires_in * 1000 } : {}),
+		};
+		await writeCredentials({ ...creds, claudeAiOauth: next });
+		streamDeck.logger.info("refreshed Claude Code token");
+		return next.accessToken;
+	} catch (e) {
+		refreshFailedAt = Date.now();
+		streamDeck.logger.warn(`token refresh failed: ${e instanceof Error ? e.message : e}`);
+		return null;
+	}
+}
+
+async function accessToken(): Promise<string | null> {
+	const creds = await readCredentials();
+	const oauth = creds?.claudeAiOauth;
+	if (!creds || !oauth?.accessToken) return null;
+	if (oauth.expiresAt > Date.now()) return oauth.accessToken;
+	return refreshAccessToken(creds, oauth);
+}
+
+/** The claude CLI only; the desktop app is "Claude" and keeps its own login. */
+async function cliRunning(): Promise<boolean> {
+	try {
+		await exec("pgrep", ["-x", "claude"]);
+		return true;
+	} catch {
+		return false;
 	}
 }
 
