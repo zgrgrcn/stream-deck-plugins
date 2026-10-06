@@ -14,7 +14,7 @@ import { claudeRunning, fetchUsage, findLimit, type Usage } from "../usage";
 
 type Settings = { limit?: string };
 
-const POLL_MS = 60_000;
+const POLL_MS = 5 * 60_000; // the usage endpoint rate-limits (429) at one call a minute
 const LABELS: Record<string, string> = { session: "5H", weekly: "WEEK" };
 
 @action({ UUID: "com.zgrgrcn.claude-usage.limit" })

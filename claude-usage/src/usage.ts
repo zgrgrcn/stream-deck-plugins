@@ -132,7 +132,10 @@ export async function fetchUsage(): Promise<Usage> {
 			signal: AbortSignal.timeout(15_000),
 		});
 		if (res.status === 401 || res.status === 403) return { error: "auth" };
-		if (!res.ok) return { error: "network" };
+		if (!res.ok) {
+			streamDeck.logger.warn(`usage HTTP ${res.status}`);
+			return { error: "network" };
+		}
 		const body = (await res.json()) as { limits?: unknown };
 		return { limits: Array.isArray(body.limits) ? (body.limits as Limit[]) : [] };
 	} catch {
