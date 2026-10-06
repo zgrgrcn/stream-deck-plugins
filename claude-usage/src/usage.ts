@@ -99,11 +99,14 @@ async function accessToken(): Promise<string | null> {
 	return refreshAccessToken(creds, oauth);
 }
 
-/** The claude CLI only; the desktop app is "Claude" and keeps its own login. */
+/**
+ * The claude CLI only. The desktop app ("Claude") keeps its own login, and the `claude` sessions it
+ * spawns from its Application Support folder are handed a token by the app and never touch the Keychain.
+ */
 async function cliRunning(): Promise<boolean> {
 	try {
-		await exec("pgrep", ["-x", "claude"]);
-		return true;
+		const { stdout } = await exec("ps", ["-axo", "comm="]);
+		return stdout.split("\n").some((c) => /(^|\/)claude$/.test(c) && !c.includes("/Application Support/Claude/"));
 	} catch {
 		return false;
 	}
