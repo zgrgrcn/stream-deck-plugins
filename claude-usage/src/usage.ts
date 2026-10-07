@@ -91,12 +91,16 @@ async function refreshAccessToken(creds: Credentials, oauth: Oauth): Promise<str
 	}
 }
 
+// Keys appear together; parallel refreshes would reuse one rotating refresh token.
+let refreshing: Promise<string | null> | null = null;
+
 async function accessToken(): Promise<string | null> {
 	const creds = await readCredentials();
 	const oauth = creds?.claudeAiOauth;
 	if (!creds || !oauth?.accessToken) return null;
 	if (oauth.expiresAt > Date.now()) return oauth.accessToken;
-	return refreshAccessToken(creds, oauth);
+	refreshing ??= refreshAccessToken(creds, oauth).finally(() => (refreshing = null));
+	return refreshing;
 }
 
 /**
