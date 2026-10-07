@@ -11,6 +11,7 @@ Add the **Usage Limit** action and pick a limit in its settings:
 - **5-hour session**
 - **Weekly (all models)**
 - **Weekly (Fable)**
+- **Last refresh:** the time of the last successful fetch and its status. Press it (or any key) to refresh.
 
 Each key shows:
 

@@ -15,12 +15,13 @@ import { claudeRunning, fetchUsage, findLimit, type Usage } from "../usage";
 type Settings = { limit?: string };
 
 const POLL_MS = 5 * 60_000; // the usage endpoint rate-limits (429) at one call a minute
-const LABELS: Record<string, string> = { session: "5H", weekly: "WEEK" };
+const LABELS: Record<string, string> = { session: "5H", weekly: "WEEK", status: "UPDATED" };
 
 @action({ UUID: "com.zgrgrcn.claude-usage.limit" })
 export class UsageLimit extends SingletonAction<Settings> {
 	private settings = new Map<string, Settings>();
 	private last: Usage | null = null;
+	private lastOk: Date | null = null;
 	private paused = false;
 	private timer: NodeJS.Timeout | null = null;
 
@@ -53,6 +54,7 @@ export class UsageLimit extends SingletonAction<Settings> {
 		if (!this.paused) {
 			const usage = await fetchUsage();
 			if ("error" in usage) streamDeck.logger.warn(`usage fetch failed: ${usage.error}`);
+			else this.lastOk = new Date();
 			// Keep the last good numbers on a network blip; show auth errors.
 			if (!("error" in usage) || usage.error === "auth" || !this.last) this.last = usage;
 		}
@@ -67,6 +69,7 @@ export class UsageLimit extends SingletonAction<Settings> {
 
 	private view(which: string, label: string): KeyView {
 		const u = this.last;
+		if (which === "status") return this.statusView(label);
 		if (!u) return { label, note: "…", dim: this.paused };
 		if ("error" in u) return { label, note: u.error === "auth" ? "RUN claude" : "OFFLINE", dim: true };
 		const limit = findLimit(u.limits, which);
@@ -83,6 +86,18 @@ export class UsageLimit extends SingletonAction<Settings> {
 			resetsIn: left,
 			pace: pace(limit.percent, resetsAt, windowMs, now),
 			dim: this.paused,
+		};
+	}
+
+	/** Time of the last successful fetch; the key press refreshes like any other key. */
+	private statusView(label: string): KeyView {
+		const u = this.last;
+		const failed = !!u && "error" in u;
+		return {
+			label,
+			value: this.lastOk?.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", hour12: false }) ?? "—",
+			note: this.paused ? "PAUSED" : !u ? "…" : failed ? (u.error === "auth" ? "RUN claude" : "OFFLINE") : "REFRESH",
+			dim: this.paused || failed,
 		};
 	}
 }
