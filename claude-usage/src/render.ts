@@ -28,20 +28,13 @@ export function duration(ms: number): string {
 	return `${Math.floor(h / 24)}d${h % 24}h`;
 }
 
-function forecast(p: Pace | undefined, now: Date): { text: string; color: string } {
+function forecast(p: Pace | undefined): { text: string; color: string } {
 	if (!p || p.projected === null) return { text: "…", color: GRAY };
-	if (p.emptyAt) {
-		const sameDay = p.emptyAt.toDateString() === now.toDateString();
-		const at = sameDay
-			? p.emptyAt.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", hour12: false })
-			: p.emptyAt.toLocaleDateString(undefined, { weekday: "short" }) + " " + p.emptyAt.getHours() + "h";
-		return { text: `OUT ${at}`, color: RED };
-	}
-	return { text: `→ ${Math.round(p.projected)}%`, color: p.projected >= 80 ? AMBER : GREEN };
+	return { text: `→ ${Math.round(p.projected)}%`, color: p.projected > 100 ? RED : p.projected >= 80 ? AMBER : GREEN };
 }
 
-export function renderKey(v: KeyView, now = new Date()): string {
-	const f = v.note ? { text: v.note, color: GRAY } : forecast(v.pace, now);
+export function renderKey(v: KeyView): string {
+	const f = v.note ? { text: v.note, color: GRAY } : forecast(v.pace);
 	const pct = v.value ?? (v.percent === undefined ? "—" : `${Math.round(v.percent)}%`);
 	const fill = Math.min(100, Math.max(0, v.percent ?? 0)) * 1.2;
 	const tick = v.elapsed === undefined ? "" : `<rect x="${12 + v.elapsed * 120 - 1.5}" y="90" width="3" height="16" fill="#fff"/>`;

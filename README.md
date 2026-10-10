@@ -11,7 +11,7 @@ Small, free, open-source plugins for the Elgato Stream Deck on macOS.
 
 ![Claude Usage keys: 5-hour, weekly and Fable limits with forecasts, and a session about to run out](docs/claude-usage.png)
 
-Each key shows how much of a limit you have used, the time until it resets, and a forecast: `→ 78%` is where you land at reset if you keep going at this rate, and `OUT 18:08` means you hit the limit before the reset. The white tick on the bar is where an even pace would put you right now.
+Each key shows how much of a limit you have used, the time until it resets, and a forecast: `→ 78%` is where you land at reset if you keep going at this rate, and above 100% (red, e.g. `→ 130%`) means you hit the limit before the reset. The white tick on the bar is where an even pace would put you right now.
 
 It reads the login Claude Code already keeps, so there is no cookie to paste and no API key. [More](claude-usage)
 

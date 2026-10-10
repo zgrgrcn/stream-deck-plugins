@@ -19,8 +19,7 @@ Each key shows:
 - **Middle:** the percent used.
 - **Bar:** usage so far. The white tick marks where an even pace would put you now. Left of the tick means you are ahead of budget.
 - **Bottom:** the forecast.
-  - `→ 78%` is where you land at reset at your average rate so far. It is green below 80% and amber from 80% to 99%.
-  - `OUT 18:08` (red) is when you hit 100% before the reset.
+  - `→ 78%` is where you land at reset at your average rate so far. It is green below 80%, amber from 80% to 100%, and red above 100% (e.g. `→ 130%`: you hit the limit before the reset).
   - `…` appears during the first 10% of a window, when there is too little data to forecast.
 
 Press a key to refresh right away.
